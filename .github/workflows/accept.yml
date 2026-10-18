@@ -1,0 +1,121 @@
+# 收录：议题中的分享码解开、检查后存入仓库，回复并关闭议题（说明见 scripts/accept_issue.py）。
+# - 方案、实测数据、作品：维护者加上「收录」标签时。名片：提交时（仓库变量 AUTO_PROFILES 为 false 时也等「收录」）。
+#   作品在仓库变量 AUTO_WORKS 为 true 且没有网盘链接时，提交时就收录。删除作品：作者本人提交时。
+# - 每 6 小时（也可在 Actions 页面手动运行）：统计作品的点赞，补上处理漏掉的议题（scripts/sweep.py）。
+# 议题内容来自提交的人，只由 Python 脚本从事件文件或 GitHub API 中读取，从不放进命令行。
+name: 收录
+on:
+  issues:
+    types: [opened, edited, labeled]
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  issues: write
+jobs:
+  accept:
+    if: >-
+      github.event_name == 'issues' && (
+        (github.event.action == 'labeled' && github.event.label.name == '收录') ||
+        (github.event.action != 'labeled' && github.event.issue.state == 'open' &&
+          (contains(github.event.issue.labels.*.name, '名片') || contains(github.event.issue.labels.*.name, '作品'))))
+    # 一次只处理一个（排队的运行都等前一个提交完）
+    concurrency:
+      group: community
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      # 取 main 的最新内容（排队等过的运行也能看到前一个刚提交的）
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安装 Pillow（重新绘制头像和封面）
+        run: python -m pip install --disable-pip-version-check --quiet "pillow>=10,<13"
+      - name: 检查并存入
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUTO_PROFILES: ${{ vars.AUTO_PROFILES }}
+          AUTO_WORKS: ${{ vars.AUTO_WORKS }}
+        run: python scripts/accept_issue.py --event "$GITHUB_EVENT_PATH" --result "$RUNNER_TEMP/result.md" --outcome "$RUNNER_TEMP/outcome"
+      - name: 提交
+        env:
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          if [ "$(cat "$RUNNER_TEMP/outcome")" != "close" ]; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "收录 #$ISSUE"
+          if ! { git pull --rebase origin main && git push; }; then
+            echo "收录时没能提交到仓库（可能同时有别的改动）。请维护者把「收录」标签去掉再加一次。" > "$RUNNER_TEMP/result.md"
+            exit 1
+          fi
+      - name: 回复
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const outcome = fs.readFileSync(process.env.RUNNER_TEMP + '/outcome', 'utf8').trim();
+            const body = fs.readFileSync(process.env.RUNNER_TEMP + '/result.md', 'utf8');
+            if (outcome === 'none' || !body.trim()) return;
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+            if (outcome === 'close') {
+              await github.rest.issues.update({ ...context.repo, issue_number: context.issue.number, state: 'closed', state_reason: 'completed' });
+            }
+      - name: 说明没能收录的原因
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = '收录时出错，请查看 Actions 的运行记录。';
+            try {
+              const outcome = fs.readFileSync(process.env.RUNNER_TEMP + '/outcome', 'utf8').trim();
+              const result = fs.readFileSync(process.env.RUNNER_TEMP + '/result.md', 'utf8');
+              if (outcome !== 'close' || result.startsWith('收录时没能提交')) body = result;
+            } catch (e) {}
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+
+  upkeep:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    concurrency:
+      group: community
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安装 Pillow
+        run: python -m pip install --disable-pip-version-check --quiet "pillow>=10,<13"
+      - name: 统计点赞，补上漏掉的议题
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUTO_PROFILES: ${{ vars.AUTO_PROFILES }}
+          AUTO_WORKS: ${{ vars.AUTO_WORKS }}
+        run: python scripts/sweep.py --replies "$RUNNER_TEMP/replies.json"
+      - name: 提交
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "定时整理：点赞数、补上处理的议题"
+          git pull --rebase origin main && git push
+      - name: 回复补上处理的议题
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const replies = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + '/replies.json', 'utf8'));
+            for (const r of replies) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: r.number, body: r.body });
+              if (r.close) await github.rest.issues.update({ ...context.repo, issue_number: r.number, state: 'closed', state_reason: 'completed' });
+            }

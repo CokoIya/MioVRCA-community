@@ -1,0 +1,24 @@
+name: 分享实测数据
+description: 把 MioVRCA 记下的「衣服在素体上是否穿模、怎样修好的」分享给社区（在软件的「设置 → 社区实测数据」中点「在 GitHub 上分享」会自动填好）
+title: "[实测] "
+labels: ["实测数据"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        实测数据只有：Booth 商品编号、衣服和 prefab 的名称、素体名称、穿模的顶点数、用到的形态键名称，不含工程路径和账号信息。收录后，其他玩家装配同一件衣服时，MioVRCA 会先套用大家常用的设置。
+  - type: textarea
+    id: code
+    attributes:
+      label: 实测数据分享码
+      description: 以 MIOVRCA-FIT-1 开头的整段文字
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: agree
+    attributes:
+      label: 确认
+      options:
+        - label: 同意公开分享这些实测数据
+          required: true

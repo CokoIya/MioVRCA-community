@@ -1,0 +1,21 @@
+name: 删除作品
+description: 从 MioVRCA 社区中删除你自己发布的作品
+title: "[删除作品] "
+labels: ["作品"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        只能删除自己发布的作品（以提交这个议题的 GitHub 账号为准）。删除后，作品会从 MioVRCA 的社区中消失。
+  - type: input
+    id: work
+    attributes:
+      label: 作品编号
+      description: w 加数字，例如 w12（在 MioVRCA 的作品详情中可以看到）
+      placeholder: w12
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: 说明（选填）

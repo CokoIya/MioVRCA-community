@@ -1,0 +1,24 @@
+name: 创作者名片（实验性）
+description: 发布或更新你在 MioVRCA 社区中的创作者名片（在 MioVRCA 的「社区（实验性）→ 我的名片」中点「发布到 GitHub」会自动填好）
+title: "[名片] "
+labels: ["名片"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        名片会公开显示在 MioVRCA 的「社区（实验性）」中，属于提交这个议题的 GitHub 账号。要修改名片，在 MioVRCA 中编辑后再提交一次即可；名片中的头像会被重新绘制为 256×256 的图片。
+  - type: textarea
+    id: code
+    attributes:
+      label: 名片分享码
+      description: 以 MIOVRCA-PROFILE-1 开头的整段文字
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: agree
+    attributes:
+      label: 确认
+      options:
+        - label: 同意公开显示名片中的内容
+          required: true

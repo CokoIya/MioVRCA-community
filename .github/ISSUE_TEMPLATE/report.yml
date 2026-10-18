@@ -1,0 +1,33 @@
+name: 举报
+description: 向维护者举报社区中的作品或创作者名片（在 MioVRCA 的作品详情或创作者页中点「举报」会自动填好）
+title: "[举报] "
+labels: ["举报"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        举报由维护者处理。请尽量说明具体的问题，例如被盗用的原作品链接。
+  - type: input
+    id: target
+    attributes:
+      label: 举报的对象
+      description: 作品编号（例如 w12）或创作者（例如 @username）
+    validations:
+      required: true
+  - type: dropdown
+    id: why
+    attributes:
+      label: 原因
+      options:
+        - 盗用他人的作品或素材
+        - 冒充他人
+        - 不适当的内容
+        - 广告或垃圾信息
+        - 链接失效或有风险
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: 详细说明

@@ -1,0 +1,30 @@
+name: 发布作品（实验性）
+description: 把你的作品（模型展示、宣传视频）分享到 MioVRCA 社区（在 MioVRCA 的「社区（实验性）」中点「发布作品」会自动填好）
+title: "[作品] "
+labels: ["作品"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        作品经维护者查看后才会显示在 MioVRCA 的「社区（实验性）→ 作品」中，届时会在这里回复。视频请先上传到视频网站（哔哩哔哩、YouTube 等），这里只放链接。发布后，其他玩家在这个议题上点 👍 就是点赞。
+  - type: input
+    id: work_title
+    attributes:
+      label: 作品名称
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: 作品分享码
+      description: 以 MIOVRCA-WORK-1 开头的整段文字
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: agree
+    attributes:
+      label: 确认
+      options:
+        - label: 作品中的内容是我自己的，或我有权分享；同意公开显示
+          required: true

@@ -1,0 +1,46 @@
+name: 分享装配方案
+description: 把 MioVRCA 的装配方案分享到社区（在软件里点「分享」→「在 GitHub 上提交」会自动填好）
+title: "[方案] "
+labels: ["方案"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        方案只记录素材在工程中的位置、商品页和菜单结构，不包含素材文件。审核通过后（维护者加上「收录」标签），它会出现在 MioVRCA 的「装配方案 → 社区方案」中。
+  - type: input
+    id: name
+    attributes:
+      label: 方案名称
+      placeholder: 例如：日常三套 + 樱发
+    validations:
+      required: true
+  - type: input
+    id: base
+    attributes:
+      label: 适用素体
+      placeholder: 例如：Kaguya
+  - type: textarea
+    id: note
+    attributes:
+      label: 说明
+      description: 适合的场合、需要注意的地方、装配后还要手动做的事
+  - type: textarea
+    id: code
+    attributes:
+      label: 分享码
+      description: 以 MIOVRCA-RECIPE-1 开头的整段文字
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: 署名（选填）
+      description: 不填时显示你的 GitHub 用户名
+  - type: checkboxes
+    id: agree
+    attributes:
+      label: 确认
+      options:
+        - label: 这是我自己整理的方案，不含素材文件，同意公开分享
+          required: true
